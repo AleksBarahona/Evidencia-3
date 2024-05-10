@@ -1,6 +1,7 @@
 export interface Usuarios {
     id_usuario: number;
-    nombre: String;
+    nombre: string;
+    apellido: string;
     fecha_creacion: Date;
     fecha_actualizacion: Date;
     fk_creado_por: number;

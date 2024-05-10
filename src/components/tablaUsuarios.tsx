@@ -2,8 +2,23 @@ import React, { useEffect, useState } from "react";
 import { getUsers } from "../services/usuariosService";
 import { Table } from "antd";
 import { Usuarios } from "../models/usuarios";
+import { Button, Drawer, Form, Input, DatePicker } from 'antd';
+import DrawerFooter from "./DrawerFooter";
+
+
 const TablaUsuarios: React.FC = () => {
+
+  const [open, setOpen] = useState(false);
   const [users, setUser] = useState<Usuarios[]>([]);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
+  
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -28,6 +43,11 @@ const TablaUsuarios: React.FC = () => {
       {
         title: 'Nombre',
         dataIndex: 'nombre',
+        key: 'nombre',
+      },
+      {
+        title: 'Apellido',
+        dataIndex: 'apellido',
         key: 'nombre',
       },
       
@@ -69,10 +89,24 @@ const TablaUsuarios: React.FC = () => {
 
   return (
     <>
+    <Button type="primary" onClick={showDrawer}>
+        Agregar usuario
+      </Button>
       <Table
         columns={columns}
         dataSource={users}
       />
+      <Drawer title="Agregar Usuario" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+        <form>
+          <Form.Item label="Nombre" name="nombre">
+            <Input></Input>
+          </Form.Item>
+          <Form.Item label="Apellido" name="apellido">
+            <Input></Input>
+          </Form.Item>
+        </form>
+      </Drawer>
+      
 
     </>
   );
