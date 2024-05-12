@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { getGenders } from "../services/generosService";
-import { Table } from "antd";
 import { Generos } from "../models/generos";
+import { Table, Button, Drawer, Form, Input } from "antd";
+import DrawerFooter from "./DrawerFooter";
 
 const TablaGenero: React.FC = () => {
+  const [open, setOpen] = useState(false);
   const [gender, setGender] = useState<Generos[]>([]);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
     const fetchGender = async () => {
@@ -70,11 +80,21 @@ const TablaGenero: React.FC = () => {
 
   return (
     <>
+    <Button type="primary" onClick={showDrawer}>
+        Agregar Genero
+      </Button>
       <Table
         columns={columns}
         dataSource={gender}
       />
-
+      <Drawer title="Agregar Genero" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+        <form>
+          <Form.Item label="Genero" name="genero">
+            <Input></Input>
+          </Form.Item>
+        
+        </form>
+      </Drawer>
     </>
   );
 }

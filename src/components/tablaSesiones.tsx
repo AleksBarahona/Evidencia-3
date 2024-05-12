@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { getSessions } from "../services/sesionesService";
-import { Table } from "antd";
 import { Sesiones } from "../models/sesiones";
+import { Table, Button, Drawer, Form, Input, Select, DatePicker } from "antd";
+import DrawerFooter from "./DrawerFooter";
 
 const TablaSesiones: React.FC = () => {
   const [session, setSessions] = useState<Sesiones[]>([]);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -88,11 +98,20 @@ const TablaSesiones: React.FC = () => {
 
   return (
     <>
+      <Button type="primary" onClick={showDrawer}>
+        Agregar Sesion
+      </Button>
       <Table
         columns={columns}
         dataSource={session}
       />
-
+      <Drawer title="Agregar Sesion" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+        <form>
+        <Form.Item label="Fecha Sesion" name="fecha_sesion">
+            <DatePicker />
+          </Form.Item>
+        </form>
+      </Drawer>
     </>
   );
 }

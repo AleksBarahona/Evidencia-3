@@ -1,10 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { getCustomers } from "../services/clientesService";
-import { Table } from "antd";
 import { Clientes } from "../models/clientes";
+import { Table, Button, Drawer, Form, Input, Select, DatePicker } from "antd";
+import DrawerFooter from "./DrawerFooter";
 
 const TablaCliente: React.FC = () => {
+  const [open, setOpen] = useState(false);
   const [clients, setCliente] = useState<Clientes[]>([]);
+  const { Option } = Select;
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
+
+  const prefixSelector = (
+    <Form.Item name="prefix" noStyle>
+      <Select style={{ width: 70 }}>
+        <Option value="52">+52</Option>
+        <Option value="87">+87</Option>
+      </Select>
+    </Form.Item>
+  );
+
+  
 
   useEffect(() => {
     const fetchClients = async () => {
@@ -103,11 +125,44 @@ const TablaCliente: React.FC = () => {
 
   return (
     <>
+    <Button type="primary" onClick={showDrawer}>
+        Agregar Cliente
+      </Button>
       <Table
         columns={columns}
         dataSource={clients}
       />
-
+      <Drawer title="Agregar Cliente" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+        <form>
+          <Form.Item label="Nombre" name="nombre">
+            <Input></Input>
+          </Form.Item>
+          <Form.Item label="Apellido" name="apellido">
+            <Input></Input>
+          </Form.Item>
+          <Form.Item label="Fecha de nacimiento" name="fecha_nac">
+            <DatePicker />
+          </Form.Item>
+          <Form.Item
+            name="telefono"
+            label="Telefono"
+            rules={[{message: 'introduce tu numero telefonico!' }]}
+          >
+            <Input addonBefore={prefixSelector} style={{ width: '100%' }} />
+      </Form.Item>
+          <Form.Item
+            name="correo"
+            label="Correo"
+            rules={[
+              {
+                type: 'email',
+              },
+            ]}
+          >
+            <Input />
+      </Form.Item>
+        </form>
+      </Drawer>
     </>
   );
 }

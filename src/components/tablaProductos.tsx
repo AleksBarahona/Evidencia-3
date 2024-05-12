@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { getProducts } from "../services/productosService";
-import { Table } from "antd";
 import { Productos } from "../models/productos";
+import { Table, Button, Drawer, Form, Input, InputNumber } from "antd";
+import DrawerFooter from "./DrawerFooter";
 
 const TablaProductos: React.FC = () => {
   const [products, setProducts] = useState<Productos[]>([]);
+  const [open, setOpen] = useState(false);
+
+  const showDrawer = () => {
+    setOpen(true);
+  };
+
+  const onClose = () => {
+    setOpen(false);
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -88,11 +98,26 @@ const TablaProductos: React.FC = () => {
 
   return (
     <>
+    <Button type="primary" onClick={showDrawer}>
+        Agregar Producto
+      </Button>
       <Table
         columns={columns}
         dataSource={products}
       />
-
+      <Drawer title="Agregar Producto" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+        <form>
+          <Form.Item label="Nombre" name="nombre">
+            <Input></Input>
+          </Form.Item>
+          <Form.Item label="Categoria" name="categoria">
+            <Input></Input>
+          </Form.Item>
+          <Form.Item label="Precio" name="precio">
+            <InputNumber min={0} step={0.01} />
+          </Form.Item>
+        </form>
+      </Drawer>
     </>
   );
 }
