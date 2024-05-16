@@ -8,7 +8,6 @@ import supabase from "../utils/supabase";
 
 
 const TablaUsuarios: React.FC = () => {
-
   const [open, setOpen] = useState(false);
   const [users, setUser] = useState<Usuarios[]>([]);
   const [nombre, setNombre] = useState<string>('');
@@ -146,7 +145,6 @@ const TablaUsuarios: React.FC = () => {
         </Form>
       </Drawer>
       
-
     </>
   );
 }

@@ -1,12 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { getAdresses } from "../services/direccionesService";
+import { getAdresses, createDireccion } from "../services/direccionesService";
 import { Direcciones } from "../models/direcciones";
 import { Table, Button, Drawer, Form, Input, InputNumber } from "antd";
 import DrawerFooter from "./DrawerFooter";
+import supabase from "../utils/supabase";
 
 const TablaDireccion: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [direction, setDirection] = useState<Direcciones[]>([]);
+  const [codigo_postal, setCP] = useState<number | undefined>(undefined);
+  const [calle, setCalle] = useState<string>('');
+  const [colonia, setColonia] = useState<string>('');
+  const [num_ext, setNumExt] = useState<number | null>(null);
+  const [num_int, setNumInt] = useState<number | 0>();
+  const [ciudad, setCiudad] = useState<string>('');
 
   const showDrawer = () => {
     setOpen(true);
@@ -28,6 +35,46 @@ const TablaDireccion: React.FC = () => {
 
     fetchDirection();
   }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const currentDateTime = new Date();
+      // Consultar el ID máximo actual en la tabla direccion
+      const maxIdResponse = await supabase
+        .from("direcciones")
+        .select("id_direccion")
+        .order("id_direccion", { ascending: false })
+        .limit(1);
+  
+      const maxId = maxIdResponse.data?.[0]?.id_direccion || 0;
+      const newId = maxId + 1;
+  
+      // Crear el objeto de direccion con el nuevo ID
+      const direccionInput: Direcciones = {
+        id_direccion: newId,
+        codigo_postal: 1,
+        calle,
+        colonia,
+        num_ext: 1,
+        num_int: 1,
+        ciudad,
+        fecha_creacion: currentDateTime,
+        fecha_actualizacion: currentDateTime,
+        fk_creado_por: 1,
+        fk_actualizado_por: 1,
+      };
+  
+      // Insertar el nuevo registro en la base de datos
+      await createDireccion(direccionInput);
+  
+      // Actualizar la lista de direcciones después de la inserción
+      const updateDireccion = await getAdresses();
+      setDirection(updateDireccion);
+      onClose();
+    } catch (error) {
+      console.error("Error creating cliente:", error);
+    }
+  };
 
   const columns = [
     {
@@ -105,13 +152,16 @@ const TablaDireccion: React.FC = () => {
         columns={columns}
         dataSource={direction}
       />
-      <Drawer title="Agregar Direccion" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+      <Drawer title="Agregar Cliente" onClose={onClose} open={open} footer={<DrawerFooter createRecord={handleSubmit}/>}>
         <form>
           <Form.Item label="Codigo postal" name="codigo_postal">
-            <InputNumber min={0} step={0.01} />
+            <InputNumber min={0} step={0.01} value={codigo_postal}/>
+          </Form.Item>
+          <Form.Item label="Calle" name="calle">
+            <Input value={calle} onChange={(e) => setCalle(e.target.value)}></Input>
           </Form.Item>
           <Form.Item label="Colonia" name="colonia">
-            <Input></Input>
+            <Input value={colonia} onChange={(e) => setColonia(e.target.value)}></Input>
           </Form.Item>
           <Form.Item label="Numero Exterior" name="num_ext">
             <InputNumber min={0} step={0.01} />
@@ -120,7 +170,7 @@ const TablaDireccion: React.FC = () => {
             <InputNumber min={0} step={0.01} />
           </Form.Item>
           <Form.Item label="Ciudad" name="ciudad">
-            <Input></Input>
+            <Input value={ciudad} onChange={(e) => setCiudad(e.target.value)}></Input>
           </Form.Item>
         </form>
       </Drawer>

@@ -7,3 +7,8 @@ export const getGenders = async (): Promise<Generos[]> => {
   if (error) throw error;
   return data
 }
+
+export const createGenero = async (genero: Generos): Promise<void> => {
+  const { error} = await supabase.from("generos").insert(genero);
+  if (error) throw error;
+}

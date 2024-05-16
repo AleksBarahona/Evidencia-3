@@ -3,10 +3,12 @@ import { getSessions } from "../services/sesionesService";
 import { Sesiones } from "../models/sesiones";
 import { Table, Button, Drawer, Form, Input, Select, DatePicker } from "antd";
 import DrawerFooter from "./DrawerFooter";
+import supabase from "../utils/supabase";
 
 const TablaSesiones: React.FC = () => {
   const [session, setSessions] = useState<Sesiones[]>([]);
   const [open, setOpen] = useState(false);
+  const [fecha_sesion, setFecha] = useState<Date | undefined>();
 
   const showDrawer = () => {
     setOpen(true);
@@ -28,6 +30,47 @@ const TablaSesiones: React.FC = () => {
 
     fetchSession();
   }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const currentDateTime = new Date();
+      // Consultar el ID máximo actual en la tabla direccion
+      const maxIdResponse = await supabase
+        .from("sesiones")
+        .select("id_sesion")
+        .order("id_sesion", { ascending: false })
+        .limit(1);
+  
+      const maxId = maxIdResponse.data?.[0]?.id_sesion || 0;
+      const newId = maxId + 1;
+  
+      // Crear el objeto de categoria con el nuevo ID
+      const sesionInput: Sesiones = {
+        id_sesion: newId,
+        fecha_sesion,
+        apellido,
+        fecha_nac,
+        fk_genero: 1,
+        telefono,
+        correo,
+        fk_direccion: 1,
+        fecha_creacion: currentDateTime,
+        fecha_actualizacion: currentDateTime,
+        fk_creado_por: 1,
+        fk_actualizado_por: 1,
+      };
+  
+      // Insertar el nuevo registro en la base de datos
+      await createCliente(clienteInput);
+  
+      // Actualizar la lista de direcciones después de la inserción
+      const updateCliente = await getCustomers();
+      setCliente(updateCliente);
+      onClose();
+    } catch (error) {
+      console.error("Error creating cliente:", error);
+    }
+  };
 
   const columns = [
     {

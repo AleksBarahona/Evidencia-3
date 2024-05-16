@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { getProducts } from "../services/productosService";
+import { createProducto, getProducts } from "../services/productosService";
 import { Productos } from "../models/productos";
 import { Table, Button, Drawer, Form, Input, InputNumber } from "antd";
 import DrawerFooter from "./DrawerFooter";
+import supabase from "../utils/supabase";
 
 const TablaProductos: React.FC = () => {
   const [products, setProducts] = useState<Productos[]>([]);
   const [open, setOpen] = useState(false);
+  const [descripcion, setNombre] = useState<string>('');
+  const [categoria, setCategoria] = useState<string>('');
+  const [precio, setPrecio] = useState<number | undefined>();
 
   const showDrawer = () => {
     setOpen(true);
@@ -29,19 +33,50 @@ const TablaProductos: React.FC = () => {
     fetchProducts();
   }, []);
 
+  const handleSubmit = async () => {
+    try {
+      const currentDateTime = new Date();
+      // Consultar el ID máximo actual en la tabla direccion
+      const maxIdResponse = await supabase
+        .from("productos")
+        .select("id_productos")
+        .order("id_productos", { ascending: false })
+        .limit(1);
+  
+      const maxId = maxIdResponse.data?.[0]?.id_productos || 0;
+      const newId = maxId + 1;
+  
+      // Crear el objeto de categoria con el nuevo ID
+      const productoInput: Productos = {
+        id_productos: newId,
+        descripcion,
+        precio: 1500,
+        fk_categoria: 1,
+        fecha_creacion: currentDateTime,
+        fecha_actualizacion: currentDateTime,
+        fk_creado_por: 1,
+        fk_actualizado_por: 1,
+      };
+  
+      // Insertar el nuevo registro en la base de datos
+      await createProducto(productoInput);
+  
+      const updateProducto = await getProducts();
+      setProducts(updateProducto);
+      onClose();
+    } catch (error) {
+      console.error("Error creating producto:", error);
+    }
+  };
+
   const columns = [
     {
       title: 'ID_Producto',
-      dataIndex: 'id_producto',
-      key: 'id_Producto',
+      dataIndex: 'id_productos',
+      key: 'id_Productos',
 
     },
-    {
-      title: 'Nombre',
-      dataIndex: 'nombre',
-      key: 'nombre',
-    },
-
+   
     {
       title: 'Descripcion',
       dataIndex: 'descripcion',
@@ -105,13 +140,10 @@ const TablaProductos: React.FC = () => {
         columns={columns}
         dataSource={products}
       />
-      <Drawer title="Agregar Producto" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+      <Drawer title="Agregar Producto" onClose={onClose} open={open} footer={<DrawerFooter createRecord={handleSubmit}/>}>
         <form>
-          <Form.Item label="Nombre" name="nombre">
-            <Input></Input>
-          </Form.Item>
-          <Form.Item label="Categoria" name="categoria">
-            <Input></Input>
+          <Form.Item label="Descripcion" name="descripcion">
+            <Input value={descripcion} onChange={(e) => setNombre(e.target.value)}></Input>
           </Form.Item>
           <Form.Item label="Precio" name="precio">
             <InputNumber min={0} step={0.01} />

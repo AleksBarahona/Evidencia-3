@@ -2,9 +2,9 @@ export interface Clientes{
     id_cliente: number;
     nombre: String;
     apellido: String;
-    fecha_nac: Date;
+    fecha_nac?: Date;
     fk_genero: number;
-    telefono: number;
+    telefono?: number;
     correo: String;
     fk_direccion: number;
     fecha_creacion: Date;

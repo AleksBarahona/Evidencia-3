@@ -10,3 +10,8 @@ export const getProducts = async (): Promise<Productos[]> => {
     }
     return data || []; 
   }
+
+  export const createProducto = async (producto: Productos): Promise<void> => {
+    const { error} = await supabase.from("productos").insert(producto);
+    if (error) throw error;
+  }

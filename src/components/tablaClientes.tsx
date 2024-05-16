@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from "react";
-import { getCustomers } from "../services/clientesService";
+import { getCustomers, createCliente } from "../services/clientesService";
 import { Clientes } from "../models/clientes";
 import { Table, Button, Drawer, Form, Input, Select, DatePicker } from "antd";
 import DrawerFooter from "./DrawerFooter";
+import supabase from "../utils/supabase";
 
 const TablaCliente: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [clients, setCliente] = useState<Clientes[]>([]);
   const { Option } = Select;
+  const [nombre, setNombre] = useState<string>('');
+  const [apellido, setApellido] = useState<string>('');
+  const [fecha_nac, setFecha] = useState<Date | undefined>();
+  const [telefono, setTelefono] = useState<number | undefined>();
+  const [correo, setCorreo] = useState<string>('');
 
   const showDrawer = () => {
     setOpen(true);
@@ -40,6 +46,47 @@ const TablaCliente: React.FC = () => {
 
     fetchClients();
   }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const currentDateTime = new Date();
+      // Consultar el ID máximo actual en la tabla direccion
+      const maxIdResponse = await supabase
+        .from("clientes")
+        .select("id_cliente")
+        .order("id_cliente", { ascending: false })
+        .limit(1);
+  
+      const maxId = maxIdResponse.data?.[0]?.id_cliente || 0;
+      const newId = maxId + 1;
+  
+      // Crear el objeto de categoria con el nuevo ID
+      const clienteInput: Clientes = {
+        id_cliente: newId,
+        nombre,
+        apellido,
+        fecha_nac,
+        fk_genero: 1,
+        telefono,
+        correo,
+        fk_direccion: 1,
+        fecha_creacion: currentDateTime,
+        fecha_actualizacion: currentDateTime,
+        fk_creado_por: 1,
+        fk_actualizado_por: 1,
+      };
+  
+      // Insertar el nuevo registro en la base de datos
+      await createCliente(clienteInput);
+  
+      // Actualizar la lista de direcciones después de la inserción
+      const updateCliente = await getCustomers();
+      setCliente(updateCliente);
+      onClose();
+    } catch (error) {
+      console.error("Error creating cliente:", error);
+    }
+  };
 
   const columns = [
     {
@@ -132,24 +179,20 @@ const TablaCliente: React.FC = () => {
         columns={columns}
         dataSource={clients}
       />
-      <Drawer title="Agregar Cliente" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+      <Drawer title="Agregar Cliente" onClose={onClose} open={open} footer={<DrawerFooter createRecord={handleSubmit}/>}>
         <form>
           <Form.Item label="Nombre" name="nombre">
-            <Input></Input>
+            <Input value={nombre} onChange={(e) => setNombre(e.target.value)}></Input>
           </Form.Item>
           <Form.Item label="Apellido" name="apellido">
-            <Input></Input>
+            <Input value={apellido} onChange={(e) => setApellido(e.target.value)}></Input>
           </Form.Item>
           <Form.Item label="Fecha de nacimiento" name="fecha_nac">
-            <DatePicker />
+            <DatePicker value={fecha_nac} onChange={(date) => setFecha(date)} />
           </Form.Item>
-          <Form.Item
-            name="telefono"
-            label="Telefono"
-            rules={[{message: 'introduce tu numero telefonico!' }]}
-          >
-            <Input addonBefore={prefixSelector} style={{ width: '100%' }} />
-      </Form.Item>
+          <Form.Item name="telefono" label="Telefono" rules={[{message: 'introduce tu numero telefonico!' }]}>
+            <Input addonBefore={prefixSelector} style={{ width: '100%' }}  value={telefono} onChange={(e) => setTelefono(Number(e.target.value))}/>
+          </Form.Item>
           <Form.Item
             name="correo"
             label="Correo"
@@ -159,7 +202,7 @@ const TablaCliente: React.FC = () => {
               },
             ]}
           >
-            <Input />
+            <Input  value={correo} onChange={(e) => setCorreo(e.target.value)}/>
       </Form.Item>
         </form>
       </Drawer>

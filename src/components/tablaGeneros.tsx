@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { getGenders } from "../services/generosService";
+import { createGenero, getGenders } from "../services/generosService";
 import { Generos } from "../models/generos";
 import { Table, Button, Drawer, Form, Input } from "antd";
 import DrawerFooter from "./DrawerFooter";
+import supabase from "../utils/supabase";
 
 const TablaGenero: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [gender, setGender] = useState<Generos[]>([]);
+  const [genero, setGenero] = useState<string>('');
 
   const showDrawer = () => {
     setOpen(true);
@@ -28,6 +30,43 @@ const TablaGenero: React.FC = () => {
 
     fetchGender();
   }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const currentDateTime = new Date();
+      // Consultar el ID máximo actual en la tabla direccion
+      const maxIdResponse = await supabase
+        .from("generos")
+        .select("id_genero")
+        .order("id_genero", { ascending: false })
+        .limit(1);
+  
+      const maxId = maxIdResponse.data?.[0]?.id_genero || 0;
+      const newId = maxId + 1;
+  
+     
+      const generoInput: Generos = {
+        id_genero: newId,
+        genero,
+        fecha_creacion: currentDateTime,
+        fecha_actualizacion: currentDateTime,
+        fk_creado_por: 1,
+        fk_actualizado_por: 1,
+      };
+  
+     
+      await createGenero(generoInput);
+  
+      // Actualizar la lista de direcciones después de la inserción
+      const updateGenero = await getGenders();
+      setGender(updateGenero);
+      onClose();
+    } catch (error) {
+      console.error("Error creating genero:", error);
+    }
+  };
+
+
 
   const columns = [
     {
@@ -87,10 +126,10 @@ const TablaGenero: React.FC = () => {
         columns={columns}
         dataSource={gender}
       />
-      <Drawer title="Agregar Genero" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
+      <Drawer title="Agregar Genero" onClose={onClose} open={open} footer={<DrawerFooter createRecord={handleSubmit}/>}>
         <form>
           <Form.Item label="Genero" name="genero">
-            <Input></Input>
+            <Input value={genero} onChange={(e) => setGenero(e.target.value)}></Input>
           </Form.Item>
         
         </form>

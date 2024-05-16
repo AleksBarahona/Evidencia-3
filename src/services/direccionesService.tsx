@@ -10,3 +10,8 @@ export const getAdresses = async (): Promise<Direcciones[]> => {
     }
     return data || []; 
   }
+
+  export const createDireccion = async (direccion: Direcciones): Promise<void> => {
+    const { error} = await supabase.from("direcciones").insert(direccion);
+    if (error) throw error;
+  }

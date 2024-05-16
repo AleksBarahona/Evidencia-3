@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { getCategories } from "../services/categoriasService";
+import { createCategoria, getCategories } from "../services/categoriasService";
 import { Categorias } from "../models/categorias";
 import { Table, Button, Drawer, Form, Input } from "antd";
 import DrawerFooter from "./DrawerFooter";
+import supabase from "../utils/supabase";
 
 const TablaCategorias: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<Categorias[]>([]);
+  const [nombre, setNombre] = useState<string>('');
 
   const showDrawer = () => {
     setOpen(true);
@@ -28,6 +30,41 @@ const TablaCategorias: React.FC = () => {
 
     fetchCategory();
   }, []);
+
+  const handleSubmit = async () => {
+    try {
+      const currentDateTime = new Date();
+      // Consultar el ID máximo actual en la tabla direccion
+      const maxIdResponse = await supabase
+        .from("categorias")
+        .select("id_categoria")
+        .order("id_categoria", { ascending: false })
+        .limit(1);
+  
+      const maxId = maxIdResponse.data?.[0]?.id_categoria || 0;
+      const newId = maxId + 1;
+  
+      // Crear el objeto de categoria con el nuevo ID
+      const categoriaInput: Categorias = {
+        id_categoria: newId,
+        nombre,
+        fecha_creacion: currentDateTime,
+        fecha_actualizacion: currentDateTime,
+        fk_creado_por: 1,
+        fk_actualizado_por: 1,
+      };
+  
+      // Insertar el nuevo registro en la base de datos
+      await createCategoria(categoriaInput);
+  
+      // Actualizar la lista de direcciones después de la inserción
+      const updateCategoria = await getCategories();
+      setCategory(updateCategoria);
+      onClose();
+    } catch (error) {
+      console.error("Error creating categoria:", error);
+    }
+  };
 
   const columns = [
     {
@@ -87,13 +124,12 @@ const TablaCategorias: React.FC = () => {
         columns={columns}
         dataSource={category}
       />
-      <Drawer title="Agregar Categoria" onClose={onClose} open={open} footer={<DrawerFooter></DrawerFooter>}>
-        <form>
-          <Form.Item label="Nombre de la categoria" name="nombre">
-            <Input></Input>
+      <Drawer title="Agregar Categoria" onClose={onClose} open={open} footer={<DrawerFooter createRecord={handleSubmit}/>}>
+      <Form onFinish={handleSubmit}>
+          <Form.Item label='Nombre' name='nombre' rules={[{ required: true, message: 'Ingrese nombre de la categoria' }]}>
+            <Input value={nombre} onChange={(e) => setNombre(e.target.value)}/>
           </Form.Item>
-        
-        </form>
+        </Form>
       </Drawer>
 
     </>
